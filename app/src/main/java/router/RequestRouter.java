@@ -20,7 +20,7 @@ import scheduler.lambda.activity.GetScheduleAcvitity;
 import scheduler.lambda.activity.UpdateScheduleActivity;
 
 public class RequestRouter {
-    
+
     private RequestRoutingDetails findRequestRoute(final RequestRoutingParameters params) {
         Activity api = null;
         switch(params.getResource().toLowerCase()) {
@@ -84,13 +84,11 @@ public class RequestRouter {
                         api = new GetReportActivity();
                         break;
                     case "put":
+                    case "post":
                         api = new UpdateReportActivity();
                         break;
                     case "delete":
                         api = new DeleteReportActivity();
-                        break;
-                    case "post":
-                        api = new UpdateReportActivity();
                         break;
                     default:
                         throw new MethodNotFoundException("The requested method is not supported");
@@ -106,9 +104,22 @@ public class RequestRouter {
 
     public ApiResponse routeRequest(final ApiRequest apiRequest,
                                     final RequestRoutingParameters routingParameters) {
+        try {
         final RequestRoutingDetails routingDetails = findRequestRoute(routingParameters);
         routingDetails.getApiToCall().validate(apiRequest);
         return routingDetails.getApiToCall().enact(apiRequest);
+        } catch (final RouteNotFoundException routeNotFoundException) {
+            return getApiResponseForException(400, routeNotFoundException);
+        } catch (final Exception exception) {
+            return getApiResponseForException(500, exception);
+        }
+    }
+
+    private ApiResponse getApiResponseForException(final int statusCode, final Exception exception) {
+        final ApiResponse apiResponse = new ApiResponse();
+        apiResponse.setStatus(statusCode);
+        apiResponse.addResponseHeader("Error", exception.getMessage());
+        return apiResponse;
     }
 
 }

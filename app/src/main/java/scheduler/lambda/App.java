@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
+import router.RouteNotFoundException;
 
 public class App implements RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
@@ -31,12 +32,11 @@ public class App implements RequestHandler<APIGatewayProxyRequestEvent, APIGatew
     public APIGatewayProxyResponseEvent handleRequest(APIGatewayProxyRequestEvent input, Context context) {
         final LambdaLogger logger = context.getLogger();
         logger.log("Event received:" + input);
-
-        return getApiGatewayResponseFromApiResponse(requestRouter.routeRequest(getApiRequestParamsFromApiGatewayRequest(input, context),
-            getRoutingParamsFromApiGatewayRequest(input, context)));
+        final ApiResponse apiResponse;
+        apiResponse = requestRouter.routeRequest(getApiRequestParamsFromApiGatewayRequest(input, context),
+                getRoutingParamsFromApiGatewayRequest(input, context));
+        return getApiGatewayResponseFromApiResponse(apiResponse);
     }
-
-
 
     private RequestRoutingParameters getRoutingParamsFromApiGatewayRequest(final APIGatewayProxyRequestEvent requestEvent,
                                                                            final Context context) {
@@ -55,38 +55,31 @@ public class App implements RequestHandler<APIGatewayProxyRequestEvent, APIGatew
     private ApiRequest getApiRequestParamsFromApiGatewayRequest(final APIGatewayProxyRequestEvent requestEvent,
                                                                 final Context context) {
 
-        if(requestEvent.getHttpMethod().equalsIgnoreCase("Post") || 
+        if(requestEvent.getHttpMethod().equalsIgnoreCase("Post") ||
             requestEvent.getHttpMethod().equalsIgnoreCase("Put")) {
             //Update and create requests should have content-type as json
-            if(!requestEvent.getHeaders().containsKey("Content-Type") || 
+            if(!requestEvent.getHeaders().containsKey("Content-Type") ||
                 !requestEvent.getHeaders().get("Content-Type").equalsIgnoreCase("application/json")) {
                 throw new MalformedParametersException("Only accepted content type is application/json.");
             }
         }
 
-        
+
         final Type requestMapType = new TypeToken<Map<String, String>>() {}.getType();
         final Map<String, String> requestParamMap = requestEvent.getHttpMethod().equalsIgnoreCase("Get") ? requestEvent.getQueryStringParameters() : json.fromJson(requestEvent.getBody(), requestMapType);
         final ApiRequest apiRequest = new ApiRequest();
         if (requestParamMap != null) {
             apiRequest.addRequestHeaders(requestParamMap);
-        }   
+        }
         context.getLogger().log("Api request:" + apiRequest);
         return apiRequest;
     }
 
     private APIGatewayProxyResponseEvent getApiGatewayResponseFromApiResponse(final ApiResponse apiResponse) {
-        final Type requestMapType = new TypeToken<Map<String, String>>() {}.getType();
-        final String responseBodyAsJson = apiResponse.isErrorResponse() ? json.toJson(new HashMap<>().put("Error", apiResponse.getErrorCode()), requestMapType) : json.toJson(apiResponse.getResponseHeadersMap(), requestMapType);
-        final Map<String, String> responseHeaderMap = new HashMap<>();
-        responseHeaderMap.put("Content-Type", "application/json");
         return new APIGatewayProxyResponseEvent()
             .withStatusCode(apiResponse.getStatus())
-            .withBody(responseBodyAsJson)
+            .withBody(apiResponse.getResponseBody())
             .withIsBase64Encoded(false)
-            .withHeaders(responseHeaderMap);
+            .withHeaders(apiResponse.getResponseHeadersMap());
     }
-
-
-
 }

@@ -3,13 +3,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 
 @Getter
 @ToString
 public class ApiResponse {
     private Map<String, String> responseHeadersMap;
-    private String errorCode;
+    @Setter
+    private String responseBody;
     private int status;
 
     public ApiResponse() {
