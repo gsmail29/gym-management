@@ -1,7 +1,7 @@
 package accountmanager.activity;
 import com.google.common.base.Preconditions;
 
-import accountmanager.component.AccountCreationComponent;
+import accountmanager.component.AccountComponent;
 import common.activity.Activity;
 import common.constant.FieldConstants;
 import common.enums.AccountTypeEnum;
@@ -15,10 +15,10 @@ import static common.constant.ApiConstants.ERROR_MESSAGE_HEADER_NAME;
 import static common.constant.ErrorCodes.ACCOUNT_ALREADY_EXISTS;
 
 public class CreateAccountActivity implements Activity {
-    private AccountCreationComponent accountCreationComponent;
+    private AccountComponent accountComponent;
 
     public CreateAccountActivity() {
-        accountCreationComponent = new AccountCreationComponent();
+        accountComponent = new AccountComponent();
     }
 
     @Override
@@ -37,7 +37,7 @@ public class CreateAccountActivity implements Activity {
     public ApiResponse enact(ApiRequest apiRequest) {
         final ApiResponse apiResponse = new ApiResponse();
         try {
-            accountCreationComponent.createAccount(getAccountDetailsFromApiRequest(apiRequest));
+            accountComponent.createAccount(getAccountDetailsFromApiRequest(apiRequest));
             apiResponse.setStatus(200);
             return apiResponse;
         } catch (final AccountAlreadyExistsException accountAlreadyExistsException) {
