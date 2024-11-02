@@ -28,7 +28,7 @@ public class GetAccountActivity implements Activity {
     public void validate(ApiRequest apiRequest) {
         // the request should contain accountId, name and accountType
         Preconditions.checkArgument(apiRequest.getRequestHeadersMap().containsKey(FieldConstants.ACCOUNT_ID),
-                "Create account request should contain accountId");
+                "Get account request should contain accountId");
     }
 
     @Override

@@ -21,4 +21,9 @@ public class AccountComponent {
     public Account getAccount(final String accountId) {
         return dbAccessor.readAccountDetailsFromDb(accountId);
     }
+
+    public void deleteAccount(final String accountId) {
+        this.dbAccessor.readAccountDetailsFromDb(accountId);
+        this.dbAccessor.deleteAccount(accountId);
+    }
 }

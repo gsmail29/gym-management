@@ -9,6 +9,7 @@ import common.exception.NonExistentAccountException;
 import common.pojo.Account;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.DeleteItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.GetItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
 
@@ -43,6 +44,10 @@ public class DynamoDbAccessor {
         }
     }
 
+    public void deleteAccount(final String accountId) {
+        dynamoDbClient.deleteItem(getDeleteItemRequestForAccount(accountId));
+    }
+
     private Account mapDbOutputToAccount(final Map<String, AttributeValue> ddbItem) {
         return Account.builder()
             .accountId(ddbItem.get("accountId").s())
@@ -70,5 +75,14 @@ public class DynamoDbAccessor {
             .item(itemHashMap)
             .tableName(ACCOUNT_DDB_TABLE_NAME)
             .build();
+    }
+
+    private DeleteItemRequest getDeleteItemRequestForAccount(final String accountId) {
+        final Map<String, AttributeValue> itemHashMap = new HashMap<>();
+        itemHashMap.put(FieldConstants.ACCOUNT_ID, AttributeValue.builder().s(accountId).build());
+        return DeleteItemRequest.builder()
+                .key(itemHashMap)
+                .tableName(ACCOUNT_DDB_TABLE_NAME)
+                .build();
     }
 }
