@@ -1,8 +1,9 @@
 package router;
 
-public class RouteNotFoundException extends RuntimeException {
+public class RouteNotFoundException extends BaseException {
 
-    public RouteNotFoundException(final String errorString) {
-        super(errorString);
+    public RouteNotFoundException(final String errorCode, final String errorMsg) {
+
+        super(errorCode, errorMsg);
     }
 }

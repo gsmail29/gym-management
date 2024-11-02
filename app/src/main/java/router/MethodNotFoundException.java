@@ -1,7 +1,8 @@
 package router;
 
-public class MethodNotFoundException extends RuntimeException {
-    public MethodNotFoundException(final String errorString) {
-        super(errorString);
+public class MethodNotFoundException extends BaseException {
+    public MethodNotFoundException(final String errorCode,
+                                   final String errorMsg) {
+        super(errorCode, errorMsg);
     }
 }

@@ -17,7 +17,7 @@ public class DynamoDbAccessor {
     private DynamoDbClient dynamoDbClient;
     private static String ACCOUNT_DDB_TABLE_NAME = System.getenv("ACCOUNT_INFO_TABLE_NAME");
     private static String ACCOUNT_DDB_TABLE_KEY_NAME = FieldConstants.ACCOUNT_ID;
-    
+
     public DynamoDbAccessor() {
         dynamoDbClient = DDbClient.getInstance();
     }
@@ -31,7 +31,7 @@ public class DynamoDbAccessor {
         if(returnedItem == null || returnedItem.size() == 0) {
             throw new NonExistentAccountException("The account with Id:" + accountId + " is not found.");
         }
-        return mapDbOutputToAccount(returnedItem);    
+        return mapDbOutputToAccount(returnedItem);
     }
 
     public boolean isAccountExists(final String accountId) {
@@ -46,7 +46,7 @@ public class DynamoDbAccessor {
     private Account mapDbOutputToAccount(final Map<String, AttributeValue> ddbItem) {
         return Account.builder()
             .accountId(ddbItem.get("accountId").s())
-            .name(ddbItem.get("name").s())
+            .name(ddbItem.get("accountName").s())
             .accountType(AccountTypeEnum.valueOf(ddbItem.get("accountType").s()))
             .build();
     }

@@ -55,16 +55,6 @@ public class App implements RequestHandler<APIGatewayProxyRequestEvent, APIGatew
     private ApiRequest getApiRequestParamsFromApiGatewayRequest(final APIGatewayProxyRequestEvent requestEvent,
                                                                 final Context context) {
 
-        if(requestEvent.getHttpMethod().equalsIgnoreCase("Post") ||
-            requestEvent.getHttpMethod().equalsIgnoreCase("Put")) {
-            //Update and create requests should have content-type as json
-            if(!requestEvent.getHeaders().containsKey("Content-Type") ||
-                !requestEvent.getHeaders().get("Content-Type").equalsIgnoreCase("application/json")) {
-                throw new MalformedParametersException("Only accepted content type is application/json.");
-            }
-        }
-
-
         final Type requestMapType = new TypeToken<Map<String, String>>() {}.getType();
         final Map<String, String> requestParamMap = requestEvent.getHttpMethod().equalsIgnoreCase("Get") ? requestEvent.getQueryStringParameters() : json.fromJson(requestEvent.getBody(), requestMapType);
         final ApiRequest apiRequest = new ApiRequest();

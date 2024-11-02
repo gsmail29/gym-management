@@ -5,6 +5,7 @@ import accountmanager.activity.DeleteAccountActivity;
 import accountmanager.activity.GetAccountActivity;
 import accountmanager.activity.UpdateAccountActivity;
 import common.activity.Activity;
+import common.constant.ErrorCodes;
 import common.model.ApiRequest;
 import common.model.ApiResponse;
 import common.model.RequestRoutingDetails;
@@ -18,6 +19,13 @@ import reporter.UpdateReportActivity;
 import scheduler.lambda.activity.DeleteScheduleActivity;
 import scheduler.lambda.activity.GetScheduleAcvitity;
 import scheduler.lambda.activity.UpdateScheduleActivity;
+
+import static common.constant.ApiConstants.ERROR_CODE_HEADER_NAME;
+import static common.constant.ApiConstants.ERROR_MESSAGE_HEADER_NAME;
+import static common.constant.ErrorCodes.INTERNAL_SERVICE_ERROR;
+import static common.constant.ErrorCodes.REQUEST_PARAMETER_VALIDATION_ERROR;
+import static common.constant.ErrorCodes.UNSUPPORTED_HTTP_METHOD;
+import static common.constant.ErrorCodes.UNSUPPORTED_RESOURCE_ERROR;
 
 public class RequestRouter {
 
@@ -39,7 +47,7 @@ public class RequestRouter {
                         api = new UpdateAccountActivity();
                         break;
                     default:
-                        throw new MethodNotFoundException("The requested method is not supported");
+                        throw new MethodNotFoundException(UNSUPPORTED_HTTP_METHOD, "The requested method is not supported");
                 }
                 break;
             case "event":
@@ -57,7 +65,7 @@ public class RequestRouter {
                         api = new UpdateEventActivity();
                         break;
                     default:
-                        throw new MethodNotFoundException("The requested method is not supported");
+                        throw new MethodNotFoundException(UNSUPPORTED_HTTP_METHOD, "The requested method is not supported");
                 }
                 break;
             case "schedule":
@@ -75,7 +83,7 @@ public class RequestRouter {
                         api = new UpdateScheduleActivity();
                         break;
                     default:
-                        throw new MethodNotFoundException("The requested method is not supported");
+                        throw new MethodNotFoundException(UNSUPPORTED_HTTP_METHOD, "The requested method is not supported");
                 }
                 break;
             case "report":
@@ -91,11 +99,11 @@ public class RequestRouter {
                         api = new DeleteReportActivity();
                         break;
                     default:
-                        throw new MethodNotFoundException("The requested method is not supported");
+                        throw new MethodNotFoundException(UNSUPPORTED_HTTP_METHOD, "The requested method is not supported");
                 }
                 break;
             default:
-                throw new RouteNotFoundException("The requested resource doesn't have any mapped api");
+                throw new RouteNotFoundException(UNSUPPORTED_RESOURCE_ERROR, "The requested resource doesn't have any mapped api");
 
         }
 
@@ -108,17 +116,23 @@ public class RequestRouter {
         final RequestRoutingDetails routingDetails = findRequestRoute(routingParameters);
         routingDetails.getApiToCall().validate(apiRequest);
         return routingDetails.getApiToCall().enact(apiRequest);
-        } catch (final RouteNotFoundException routeNotFoundException) {
+        } catch (final RouteNotFoundException  routeNotFoundException) {
             return getApiResponseForException(400, routeNotFoundException);
-        } catch (final Exception exception) {
-            return getApiResponseForException(500, exception);
+        } catch (final IllegalArgumentException illegalArgumentException) {
+            return getApiResponseForException(400, new BaseException(REQUEST_PARAMETER_VALIDATION_ERROR, illegalArgumentException.getMessage()));
+        }
+        catch (final Exception exception) {
+            exception.printStackTrace(System.out);
+            return getApiResponseForException(500, new BaseException(INTERNAL_SERVICE_ERROR, exception.getMessage()));
         }
     }
 
-    private ApiResponse getApiResponseForException(final int statusCode, final Exception exception) {
+    private ApiResponse getApiResponseForException(final int statusCode,
+                                                   final BaseException exception) {
         final ApiResponse apiResponse = new ApiResponse();
         apiResponse.setStatus(statusCode);
-        apiResponse.addResponseHeader("Error", exception.getMessage());
+        apiResponse.addResponseHeader(ERROR_MESSAGE_HEADER_NAME, exception.getMessage());
+        apiResponse.addResponseHeader(ERROR_CODE_HEADER_NAME, exception.getErrorCode());
         return apiResponse;
     }
 
